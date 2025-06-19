@@ -1,27 +1,32 @@
 <?php
 session_start();
-require_once 'api/config.php';
+if (isset($_SESSION['user'])) {
+    header("Location: index.php");
+    exit();
+}
+
+require_once 'config.php';
 
 $error = '';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-  $username = trim($_POST['username']);
-  $password = md5($_POST['password']); // Usas MD5 porque así está en tu base por ahora
+    $username = trim($_POST['username']);
+    $password = md5($_POST['password']); // Considera cambiar a password_hash()
 
-  // Preparamos la consulta segura
-  $stmt = $conn->prepare("SELECT * FROM users WHERE username = ? AND password = ?");
-  $stmt->bind_param("ss", $username, $password);
-  $stmt->execute();
-  $result = $stmt->get_result();
+    $stmt = $conn->prepare("SELECT id, username FROM users WHERE username = ? AND password = ?");
+    $stmt->bind_param("ss", $username, $password);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-  // Verificamos si el usuario existe
-  if ($result->num_rows === 1) {
-    $_SESSION['user'] = $username;
-    header("Location: index.php");
-    exit();
-  } else {
-    $error = "Usuario o contraseña incorrectos.";
-  }
+    if ($result->num_rows === 1) {
+        $user = $result->fetch_assoc();
+        $_SESSION['user'] = $user['username'];
+        $_SESSION['user_id'] = $user['id'];
+        header("Location: index.php");
+        exit();
+    } else {
+        $error = "Usuario o contraseña incorrectos.";
+    }
 }
 ?>
 

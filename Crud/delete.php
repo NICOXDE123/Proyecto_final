@@ -1,13 +1,16 @@
 <?php
+session_start();
+if (!isset($_SESSION['user'])) {
+    header("Location: login.php");
+    exit();
+}
 
 $id = intval($_GET['id']);
 
-$ch = curl_init('https://teclab.uct.cl/~nicolas.huenchual/Proyecto_final/api/Proyectos.php/' . $id);
-curl_setopt_array($ch, [
-  CURLOPT_CUSTOMREQUEST => 'DELETE',
-  CURLOPT_RETURNTRANSFER => true
-]);
-
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, 'http://localhost/Proyecto_final/api/Proyectos.php/'.$id);
+curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 $response = curl_exec($ch);
 curl_close($ch);
 

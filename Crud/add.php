@@ -1,6 +1,12 @@
 <?php
+session_start();
+if (!isset($_SESSION['user'])) {
+    header("Location: login.php");
+    exit();
+}
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $img = $_FILES['imagen']['name'];
+    $img = uniqid().'_'.$_FILES['imagen']['name'];
     move_uploaded_file($_FILES['imagen']['tmp_name'], "uploads/$img");
 
     $data = [
@@ -11,14 +17,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         'imagen' => $img
     ];
 
-    $ch = curl_init('https://teclab.uct.cl/~nicolas.huenchual/Proyecto_final/api/Proyectos.php');
+    $ch = curl_init('http://localhost/Proyecto_final/api/Proyectos.php');
     curl_setopt_array($ch, [
-        CURLOPT_CUSTOMREQUEST => 'POST',
-        CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+        CURLOPT_POST => true,
         CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
         CURLOPT_POSTFIELDS => json_encode($data)
     ]);
-
+    
     $response = curl_exec($ch);
     curl_close($ch);
 

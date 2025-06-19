@@ -1,8 +1,13 @@
 <?php
-$json = @file_get_contents('api/proyectos.php');
+session_start();
+if (!isset($_SESSION['user'])) {
+    header("Location: login.php");
+    exit();
+}
+
+$json = @file_get_contents('api/Proyectos.php');
 $proyectos = json_decode($json, true);
 
-// Asegura que $proyectos siempre sea un array
 if (!is_array($proyectos)) {
     $proyectos = [];
 }

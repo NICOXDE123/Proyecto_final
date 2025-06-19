@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $data['imagen'] = $img;
     }
 
-    move_uploaded_file($_FILES['imagen']['tmp_name'], "../uploads/$img");
+    move_uploaded_file($_FILES['imagen']['tmp_name'], "Proyecto_final/uploads/$img");
     curl_setopt_array($ch, [
         CURLOPT_CUSTOMREQUEST => 'PATCH',
         CURLOPT_HTTPHEADER => ['Content-Type: application/json'],

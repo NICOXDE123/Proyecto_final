@@ -1,73 +1,79 @@
 <?php
-// Mostrar errores (solo en desarrollo)
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
-
-// Cabecera JSON
-header('Content-Type: application/json');
-
-// Conexión a la base de datos
 include 'config.php';
 
-// Obtener el método de la petición
+// Manejar CORS preflight
+if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+    exit(0);
+}
+
+// Obtener método HTTP
 $method = $_SERVER['REQUEST_METHOD'];
 
-// Obtener el ID desde la URL si existe
-$id = null;
-if (isset($_SERVER['PATH_INFO']) && $_SERVER['PATH_INFO'] !== '/') {
-    $request = explode('/', trim($_SERVER['PATH_INFO'], '/'));
-    if (isset($request[0]) && is_numeric($request[0])) {
-        $id = intval($request[0]);
-    }
-}
+// Obtener ID si existe
+$id = isset($_GET['id']) ? intval($_GET['id']) : null;
 
-// Función para obtener JSON del cuerpo
+// Obtener datos del cuerpo
 function getInput() {
-    return json_decode(file_get_contents("php://input"), true);
+    return json_decode(file_get_contents('php://input'), true);
 }
 
-// Manejo de métodos HTTP
-switch ($method) {
-    case 'GET':
-        if ($id) {
-            $res = $conn->query("SELECT * FROM proyectos WHERE id=$id");
-            echo json_encode($res->fetch_assoc());
-        } else {
-            $res = $conn->query("SELECT * FROM proyectos ORDER BY created_at DESC");
-            $out = [];
-            while ($row = $res->fetch_assoc()) {
-                $out[] = $row;
+try {
+    switch ($method) {
+        case 'GET':
+            if ($id) {
+                $stmt = $conn->prepare("SELECT * FROM proyectos WHERE id = ?");
+                $stmt->execute([$id]);
+                $proyecto = $stmt->fetch(PDO::FETCH_ASSOC);
+                echo json_encode($proyecto ?: ['error' => 'Proyecto no encontrado']);
+            } else {
+                $stmt = $conn->query("SELECT * FROM proyectos ORDER BY created_at DESC");
+                echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
             }
-            echo json_encode($out);
-        }
-        break;
+            break;
 
-    case 'POST':
-        $d = getInput();
-        $stmt = $conn->prepare("INSERT INTO proyectos (titulo, descripcion, url_github, url_produccion, imagen) VALUES (?, ?, ?, ?, ?)");
-        $stmt->bind_param("sssss", $d['titulo'], $d['descripcion'], $d['url_github'], $d['url_produccion'], $d['imagen']);
-        $stmt->execute();
-        echo json_encode(["success" => true, "id" => $stmt->insert_id]);
-        break;
+        case 'POST':
+            $data = getInput();
+            $stmt = $conn->prepare("INSERT INTO proyectos (titulo, descripcion, url_github, url_produccion, imagen) VALUES (?, ?, ?, ?, ?)");
+            $stmt->execute([
+                $data['titulo'],
+                $data['descripcion'],
+                $data['url_github'],
+                $data['url_produccion'],
+                $data['imagen']
+            ]);
+            echo json_encode(['success' => true, 'id' => $conn->lastInsertId()]);
+            break;
 
-    case 'PATCH':
-        $d = getInput();
-        $sets = [];
-        foreach ($d as $k => $v) {
-            $sets[] = "$k='" . $conn->real_escape_string($v) . "'";
-        }
-        $conn->query("UPDATE proyectos SET " . implode(",", $sets) . " WHERE id=$id");
-        echo json_encode(["success" => true]);
-        break;
+        case 'PATCH':
+            $data = getInput();
+            $fields = [];
+            $values = [];
+            
+            foreach ($data as $key => $value) {
+                $fields[] = "$key = ?";
+                $values[] = $value;
+            }
+            $values[] = $id;
+            
+            $sql = "UPDATE proyectos SET ".implode(', ', $fields)." WHERE id = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->execute($values);
+            
+            echo json_encode(['success' => $stmt->rowCount() > 0]);
+            break;
 
-    case 'DELETE':
-        $conn->query("DELETE FROM proyectos WHERE id=$id");
-        echo json_encode(["success" => true]);
-        break;
+        case 'DELETE':
+            $stmt = $conn->prepare("DELETE FROM proyectos WHERE id = ?");
+            $stmt->execute([$id]);
+            echo json_encode(['success' => $stmt->rowCount() > 0]);
+            break;
 
-    default:
-        http_response_code(405);
-        echo json_encode(["error" => "Método no permitido"]);
-        break;
+        default:
+            http_response_code(405);
+            echo json_encode(['error' => 'Método no permitido']);
+    }
+} catch(PDOException $e) {
+    http_response_code(500);
+    echo json_encode(['error' => $e->getMessage()]);
 }
 ?>
