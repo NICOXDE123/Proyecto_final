@@ -1,7 +1,12 @@
 <?php
+session_start();
+if (!isset($_SESSION['user'])) {
+    header("Location: login.php");
+    exit();
+}
 
 $id = intval($_GET['id']);
-$json = file_get_contents('' . $id);
+$json = file_get_contents('https://teclab.uct.cl/~nicolas.huenchual/Proyecto_final/api/Proyectos.php/' . $id);
 $p = json_decode($json, true);
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -14,11 +19,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     if (!empty($_FILES['imagen']['name'])) {
         $img = $_FILES['imagen']['name'];
-        move_uploaded_file($_FILES['imagen']['tmp_name'], "uploads/$img");
+        move_uploaded_file($_FILES['imagen']['tmp_name'], "../uploads/$img");
         $data['imagen'] = $img;
     }
 
-    move_uploaded_file($_FILES['imagen']['tmp_name'], "Proyecto_final/uploads/$img");
+    $ch = curl_init('https://teclab.uct.cl/~nicolas.huenchual/Proyecto_final/api/Proyectos.php/' . $id);
     curl_setopt_array($ch, [
         CURLOPT_CUSTOMREQUEST => 'PATCH',
         CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
@@ -31,15 +36,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     header("Location: index.php");
     exit;
 }
-<?php
-// Aquí asumes que la variable $p está definida antes de este bloque,
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <title>Editar proyecto</title>
-  <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
 </head>
 <body>
@@ -69,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
       <label for="imagen" class="form-label">Imagen:</label>
       <input type="file" class="form-control" id="imagen" name="imagen">
       <?php if (!empty($p['imagen'])): ?>
-        <p>Imagen actual: <img src="uploads/<?= htmlspecialchars($p['imagen']) ?>" width="100"></p>
+        <p>Imagen actual: <img src="../uploads/<?= htmlspecialchars($p['imagen']) ?>" width="100"></p>
       <?php endif; ?>
     </div>
 

@@ -6,8 +6,12 @@ if (!isset($_SESSION['user'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $img = uniqid().'_'.$_FILES['imagen']['name'];
-    move_uploaded_file($_FILES['imagen']['tmp_name'], "uploads/$img");
+    if (!empty($_FILES['imagen']['name'])) {
+        $img = uniqid().'_'.basename($_FILES['imagen']['name']);
+        move_uploaded_file($_FILES['imagen']['tmp_name'], "../uploads/$img");
+    } else {
+        $img = null;
+    }
 
     $data = [
         'titulo' => $_POST['titulo'],
@@ -17,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         'imagen' => $img
     ];
 
-    $ch = curl_init('http://localhost/Proyecto_final/api/Proyectos.php');
+    $ch = curl_init('https://teclab.uct.cl/~nicolas.huenchual/Proyecto_final/api/Proyectos.php');
     curl_setopt_array($ch, [
         CURLOPT_POST => true,
         CURLOPT_RETURNTRANSFER => true,
