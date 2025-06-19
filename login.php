@@ -6,14 +6,15 @@ $error = '';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $username = trim($_POST['username']);
-  $password = md5($_POST['password']); // puedes cambiar esto a password_hash en el futuro
+  $password = md5($_POST['password']); // Usas MD5 porque así está en tu base por ahora
 
-  $sql = "SELECT * FROM users WHERE username = ? AND password = ?";
-  $stmt = $conn->prepare($sql);
+  // Preparamos la consulta segura
+  $stmt = $conn->prepare("SELECT * FROM users WHERE username = ? AND password = ?");
   $stmt->bind_param("ss", $username, $password);
   $stmt->execute();
   $result = $stmt->get_result();
 
+  // Verificamos si el usuario existe
   if ($result->num_rows === 1) {
     $_SESSION['user'] = $username;
     header("Location: index.php");
@@ -36,10 +37,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   <div class="container d-flex justify-content-center align-items-center vh-100">
     <div class="card shadow p-4" style="width: 100%; max-width: 400px;">
       <h4 class="mb-3 text-center">Iniciar Sesión</h4>
-      <?php if ($error): ?>
+
+      <?php if (!empty($error)) : ?>
         <div class="alert alert-danger"><?= $error ?></div>
       <?php endif; ?>
-      <form method="post">
+
+      <form method="post" action="">
         <div class="mb-3">
           <label for="username" class="form-label">Usuario</label>
           <input type="text" name="username" class="form-control" required autofocus>
@@ -54,3 +57,4 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   </div>
 </body>
 </html>
+<?php 
