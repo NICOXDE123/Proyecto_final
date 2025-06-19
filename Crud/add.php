@@ -11,7 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         'imagen' => $img
     ];
 
-    $ch = curl_init('http://localhost/Portafolio_CRUD/api/proyectos.php');
+    $ch = curl_init('https://teclab.uct.cl/~nicolas.huenchual/Proyecto_final/api/Proyectos.php');
     curl_setopt_array($ch, [
         CURLOPT_CUSTOMREQUEST => 'POST',
         CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
