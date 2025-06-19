@@ -1,6 +1,7 @@
 <?php
-$json = @file_get_contents('api/');
+$json = @file_get_contents('api/proyectos.php');
 $proyectos = json_decode($json, true);
+
 // Asegura que $proyectos siempre sea un array
 if (!is_array($proyectos)) {
     $proyectos = [];
@@ -30,23 +31,23 @@ if (!is_array($proyectos)) {
       <?php foreach ($proyectos as $p): ?>
         <div class="col-md-4 mb-4">
           <div class="card shadow-sm h-100">
-            <img src="../uploads/<?=htmlspecialchars($p['imagen'])?>" class="card-img-top" alt="Imagen del proyecto">
+            <img src="uploads/<?= htmlspecialchars($p['imagen']) ?>" class="card-img-top" alt="Imagen del proyecto">
             <div class="card-body">
-              <h5 class="card-title"><?=htmlspecialchars($p['titulo'])?></h5>
-              <p class="card-text"><?=htmlspecialchars($p['descripcion'])?></p>
+              <h5 class="card-title"><?= htmlspecialchars($p['titulo']) ?></h5>
+              <p class="card-text"><?= htmlspecialchars($p['descripcion']) ?></p>
             </div>
             <div class="card-footer d-flex justify-content-between">
               <div>
-                <a href="<?=htmlspecialchars($p['url_github'])?>" target="_blank" class="btn btn-outline-dark btn-sm">
+                <a href="<?= htmlspecialchars($p['url_github']) ?>" target="_blank" class="btn btn-outline-dark btn-sm">
                   <i class="fab fa-github"></i> GitHub
                 </a>
-                <a href="<?=htmlspecialchars($p['url_produccion'])?>" target="_blank" class="btn btn-outline-success btn-sm">
+                <a href="<?= htmlspecialchars($p['url_produccion']) ?>" target="_blank" class="btn btn-outline-success btn-sm">
                   En producción
                 </a>
               </div>
               <div>
                 <a href="edit.php?id=<?= $p['id'] ?>" class="btn btn-warning btn-sm">Editar</a>
-                <a href="delete.php?id=<?= $p['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('¿Seguro?')">Eliminar</a>
+                <a href="delete.php?id=<?= $p['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('¿Seguro que deseas eliminar este proyecto?')">Eliminar</a>
               </div>
             </div>
           </div>
