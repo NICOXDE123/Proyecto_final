@@ -1,5 +1,5 @@
 <?php
-include 'includes/validar.php';
+include 'includes/validar.php/';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $nombre = validar($_POST['nombre']);

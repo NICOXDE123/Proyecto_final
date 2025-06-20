@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $response = curl_exec($ch);
     curl_close($ch);
 
-    header("Location: Crud/index.php");
+    header("Location: index.php");
     exit;
 }
 ?>
