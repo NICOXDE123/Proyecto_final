@@ -17,7 +17,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
   if ($result->num_rows === 1) {
     $_SESSION['user'] = $username;
-    header("Location: index.php");
+    header("Location: /Crud/index.php");
     exit;
   } else {
     $error = "Credenciales incorrectas.";

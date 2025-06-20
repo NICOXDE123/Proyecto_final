@@ -1,7 +1,7 @@
 <?php
 session_start();
 if (!isset($_SESSION['user'])) {
-    header("Location: login.php");
+    header("Location: ../login.php");
     exit();
 }
 
@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     curl_exec($ch);
     curl_close($ch);
 
-    header("Location: index.php");
+    header("Location: Crud/index.php");
     exit;
 }
 ?>
