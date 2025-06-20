@@ -5,7 +5,7 @@ if (!isset($_SESSION['user'])) {
     exit();
 }
 
-$json = @file_get_contents('api/Proyectos.php/');
+$json = @file_get_contents('../api/Proyectos.php/');
 $proyectos = json_decode($json, true);
 
 if (!is_array($proyectos)) {
@@ -36,7 +36,7 @@ if (!is_array($proyectos)) {
       <?php foreach ($proyectos as $p): ?>
         <div class="col-md-4 mb-4">
           <div class="card shadow-sm h-100">
-            <img src="uploads/<?= htmlspecialchars($p['imagen']) ?>" class="card-img-top" alt="Imagen del proyecto">
+            <img src="../uploads/<?= htmlspecialchars($p['imagen']) ?>" class="card-img-top" alt="Imagen del proyecto">
             <div class="card-body">
               <h5 class="card-title"><?= htmlspecialchars($p['titulo']) ?></h5>
               <p class="card-text"><?= htmlspecialchars($p['descripcion']) ?></p>
