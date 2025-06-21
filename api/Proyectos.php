@@ -43,11 +43,17 @@ switch ($method) {
     case 'GET':
         if ($id) {
             $stmt = $conn->prepare("SELECT * FROM proyectos WHERE id = ?");
-            $stmt->execute([$id]);
-            echo json_encode($stmt->fetch(PDO::FETCH_ASSOC));
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            echo json_encode($result->fetch_assoc());
+            $stmt->close();
         } else {
-            $stmt = $conn->query("SELECT * FROM proyectos ORDER BY created_at DESC");
-            $out = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $result = $conn->query("SELECT * FROM proyectos ORDER BY created_at DESC");
+            $out = [];
+            while ($row = $result->fetch_assoc()) {
+                $out[] = $row;
+            }
             echo json_encode($out);
         }
         break;
@@ -60,14 +66,10 @@ switch ($method) {
             exit;
         }
         $stmt = $conn->prepare("INSERT INTO proyectos (titulo, descripcion, url_github, url_produccion, imagen) VALUES (?, ?, ?, ?, ?)");
-        $stmt->execute([
-            $d['titulo'],
-            $d['descripcion'],
-            $d['url_github'],
-            $d['url_produccion'],
-            $d['imagen']
-        ]);
-        echo json_encode(["success" => true, "id" => $conn->lastInsertId()]);
+        $stmt->bind_param("sssss", $d['titulo'], $d['descripcion'], $d['url_github'], $d['url_produccion'], $d['imagen']);
+        $stmt->execute();
+        echo json_encode(["success" => true, "id" => $conn->insert_id]);
+        $stmt->close();
         break;
 
     case 'PATCH':
@@ -75,18 +77,23 @@ switch ($method) {
         $permitidos = ['titulo', 'descripcion', 'url_github', 'url_produccion', 'imagen'];
         $sets = [];
         $params = [];
+        $types = '';
         foreach ($permitidos as $campo) {
             if (isset($d[$campo])) {
                 $sets[] = "$campo = ?";
                 $params[] = $d[$campo];
+                $types .= 's';
             }
         }
         if ($id && count($sets) > 0) {
             $params[] = $id;
+            $types .= 'i';
             $sql = "UPDATE proyectos SET " . implode(", ", $sets) . " WHERE id = ?";
             $stmt = $conn->prepare($sql);
-            $stmt->execute($params);
+            $stmt->bind_param($types, ...$params);
+            $stmt->execute();
             echo json_encode(["success" => true]);
+            $stmt->close();
         } else {
             http_response_code(400);
             echo json_encode(["error" => "Datos inválidos"]);
@@ -96,8 +103,10 @@ switch ($method) {
     case 'DELETE':
         if ($id) {
             $stmt = $conn->prepare("DELETE FROM proyectos WHERE id = ?");
-            $stmt->execute([$id]);
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
             echo json_encode(["success" => true]);
+            $stmt->close();
         } else {
             http_response_code(400);
             echo json_encode(["error" => "ID inválido"]);

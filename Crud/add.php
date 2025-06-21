@@ -30,7 +30,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         'imagen' => $img
     ];
 
-    $ch = curl_init('https://teclab.uct.cl/~nicolas.huenchual/Proyecto_final/api/proyectos.php');
+    // Asegúrate que el nombre del archivo de la API es correcto (mayúsculas/minúsculas)
+    $ch = curl_init('https://teclab.uct.cl/~nicolas.huenchual/Proyecto_final/api/Proyectos.php');
     curl_setopt_array($ch, [
         CURLOPT_POST => true,
         CURLOPT_RETURNTRANSFER => true,
@@ -46,7 +47,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         header("Location: index.php");
         exit;
     } else {
-        echo "<div class='alert alert-danger'>Error al guardar el proyecto (código $httpCode)</div>";
+        $errorMsg = json_decode($response, true)['error'] ?? "Error al guardar el proyecto (código $httpCode)";
+        echo "<div class='alert alert-danger'>$errorMsg</div>";
     }
 }
 ?>

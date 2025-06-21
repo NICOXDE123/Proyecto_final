@@ -9,10 +9,9 @@ $db = "nicolas_huenchual_db1";
 $user = "nicolas_huenchual";
 $pass = "nicolas_huenchual2025";
 
-try {
-    $conn = new PDO("mysql:host=$host;dbname=$db;charset=utf8", $user, $pass);
-    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch(PDOException $e) {
-    die(json_encode(["error" => "Conexión fallida: " . $e->getMessage()]));
+$conn = new mysqli($host, $user, $pass, $db);
+
+if ($conn->connect_error) {
+    die(json_encode(["error" => "Conexión fallida: " . $conn->connect_error]));
 }
 ?>
