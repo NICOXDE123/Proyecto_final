@@ -5,7 +5,7 @@ if (!isset($_SESSION['user'])) {
     exit();
 }
 
-$json = @file_get_contents('../api/Proyectos.php/');
+$json = @file_get_contents('https://teclab.uct.cl/~nicolas.huenchual/Proyecto_final/api/Proyectos.php/');
 $proyectos = json_decode($json, true);
 
 if (!is_array($proyectos)) {

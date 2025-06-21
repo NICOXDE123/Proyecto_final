@@ -1,7 +1,7 @@
 <?php
 session_start();
 if (!isset($_SESSION['user'])) {
-    header("Location: ../login.php/");
+    header("Location: ../login.php");
     exit();
 }
 
@@ -18,9 +18,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     ];
 
     if (!empty($_FILES['imagen']['name'])) {
-        $img = $_FILES['imagen']['name'];
-        move_uploaded_file($_FILES['imagen']['tmp_name'], "../uploads/$img");
-        $data['imagen'] = $img;
+        $nombreOriginal = basename($_FILES['imagen']['name']);
+        $img = uniqid() . '_' . $nombreOriginal;
+        $tipoPermitido = ['image/jpeg', 'image/png', 'image/webp'];
+        if (in_array($_FILES['imagen']['type'], $tipoPermitido)) {
+            move_uploaded_file($_FILES['imagen']['tmp_name'], "../uploads/$img");
+            $data['imagen'] = $img;
+        } else {
+            die("Formato de imagen no permitido.");
+        }
     }
 
     $ch = curl_init('https://teclab.uct.cl/~nicolas.huenchual/Proyecto_final/api/Proyectos.php/' . $id);

@@ -12,8 +12,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $username = $_POST['username'];
   $password = md5($_POST['password']);
 
-  $sql = "SELECT * FROM users WHERE username='$username' AND password='$password'";
-  $result = $conn->query($sql);
+  $stmt = $conn->prepare("SELECT * FROM users WHERE username=? AND password=?");
+  $stmt->bind_param("ss", $username, $password);
+  $stmt->execute();
+  $result = $stmt->get_result();
 
   if ($result->num_rows === 1) {
     $_SESSION['user'] = $username;
@@ -22,6 +24,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   } else {
     $error = "Credenciales incorrectas.";
   }
+  $stmt->close();
 }
 ?>
 <!DOCTYPE html>
