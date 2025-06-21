@@ -41,9 +41,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    if ($response === false) {
+        echo "<div class='alert alert-danger'>Error CURL: " . curl_error($ch) . "</div>";
+    }
     curl_close($ch);
 
-    if ($httpCode === 200) {
+    if ($httpCode === 200 || $httpCode === 201) {
         header("Location: index.php");
         exit;
     } else {

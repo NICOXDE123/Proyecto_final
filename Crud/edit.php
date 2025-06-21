@@ -9,6 +9,12 @@ $id = intval($_GET['id']);
 $json = file_get_contents('https://teclab.uct.cl/~nicolas.huenchual/Proyecto_final/api/Proyectos.php/' . $id);
 $p = json_decode($json, true);
 
+// Validar si el proyecto existe
+if (!$p || isset($p['error'])) {
+    echo "<div class='alert alert-danger'>Proyecto no encontrado o error al cargar los datos.</div>";
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $data = [
         'titulo' => $_POST['titulo'],
@@ -36,11 +42,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_POSTFIELDS => json_encode($data)
     ]);
-    curl_exec($ch);
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
 
-    header("Location: index.php");
-    exit;
+    if ($httpCode === 200) {
+        header("Location: index.php");
+        exit;
+    } else {
+        $errorMsg = json_decode($response, true)['error'] ?? "Error al actualizar el proyecto (código $httpCode)";
+        echo "<div class='alert alert-danger'>$errorMsg</div>";
+    }
 }
 ?>
 <!DOCTYPE html>

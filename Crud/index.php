@@ -10,7 +10,11 @@ $proyectos = json_decode($json, true);
 
 if (!is_array($proyectos)) {
     $proyectos = [];
+
 }
+var_dump($proyectos);
+exit;
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
