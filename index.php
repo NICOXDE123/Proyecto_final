@@ -1,3 +1,10 @@
+<?php
+session_start();
+if (isset($_SESSION['user'])) {
+    header("Location: Crud/index.php"); // o cambia según tu ruta real del panel
+    exit();
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>

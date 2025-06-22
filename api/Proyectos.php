@@ -1,94 +1,97 @@
 <?php
-// Mostrar errores (solo en desarrollo)
 ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// Cabecera JSON
-header('Content-Type: application/json');
+header("Content-Type: application/json");
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, PATCH, DELETE, OPTIONS");
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 
 session_start();
-
-// Conexión a la base de datos
 require_once 'config.php';
 
-// Obtener el método de la petición
-$method = $_SERVER['REQUEST_METHOD'];
+$rawMethod = $_SERVER['REQUEST_METHOD'];
+$input = null;
 
-// Obtener el ID desde la URL (si existe, por ejemplo /proyectos.php/5)
+if ($rawMethod !== 'GET') {
+    $input = json_decode(file_get_contents("php://input"), true);
+}
+
+if ($rawMethod === 'POST' && isset($input['_method'])) {
+    $method = strtoupper($input['_method']);
+} else {
+    $method = $rawMethod;
+}
+
+
 $id = null;
-if (isset($_SERVER['PATH_INFO']) && $_SERVER['PATH_INFO'] !== '/') {
-    $request = explode('/', trim($_SERVER['PATH_INFO'], '/'));
-    if (isset($request[0]) && is_numeric($request[0])) {
-        $id = intval($request[0]);
+if (!empty($_SERVER['PATH_INFO']) && $_SERVER['PATH_INFO'] !== '/') {
+    $partes = explode('/', trim($_SERVER['PATH_INFO'], '/'));
+    if (is_numeric($partes[0])) {
+        $id = intval($partes[0]);
     }
 }
 
-// Función para obtener JSON del cuerpo
 function getInput() {
-    return json_decode(file_get_contents("php://input"), true);
+    if ($_SERVER['REQUEST_METHOD'] === 'GET') return null;
+    return $_POST ?: json_decode(file_get_contents("php://input"), true);
 }
 
-// Protección: solo permitir POST, PATCH y DELETE si el usuario está logueado
 if (in_array($method, ['POST', 'PATCH', 'DELETE']) && !isset($_SESSION['user'])) {
     http_response_code(401);
     echo json_encode(["error" => "No autorizado"]);
     exit;
 }
 
-// Manejo de métodos HTTP
 switch ($method) {
     case 'GET':
         if ($id) {
             $stmt = $conn->prepare("SELECT * FROM proyectos WHERE id = ?");
             $stmt->bind_param("i", $id);
             $stmt->execute();
-            $result = $stmt->get_result();
-            echo json_encode($result->fetch_assoc());
+            $res = $stmt->get_result();
+            echo json_encode($res->fetch_assoc() ?: ["error" => "No encontrado"]);
             $stmt->close();
         } else {
-            $result = $conn->query("SELECT * FROM proyectos ORDER BY created_at DESC");
-            $out = [];
-            while ($row = $result->fetch_assoc()) {
-                $out[] = $row;
-            }
-            echo json_encode($out);
+            $res = $conn->query("SELECT * FROM proyectos ORDER BY created_at DESC");
+            echo json_encode($res->fetch_all(MYSQLI_ASSOC));
         }
         break;
 
     case 'POST':
-        $d = getInput();
-        if (empty($d['titulo']) || empty($d['descripcion'])) {
+        $data = getInput();
+        if (empty($data['titulo']) || empty($data['descripcion'])) {
             http_response_code(400);
-            echo json_encode(["error" => "Título y descripción son obligatorios"]);
+            echo json_encode(["error" => "Título y descripción requeridos"]);
             exit;
         }
         $stmt = $conn->prepare("INSERT INTO proyectos (titulo, descripcion, url_github, url_produccion, imagen) VALUES (?, ?, ?, ?, ?)");
-        $stmt->bind_param("sssss", $d['titulo'], $d['descripcion'], $d['url_github'], $d['url_produccion'], $d['imagen']);
+        $stmt->bind_param("sssss", $data['titulo'], $data['descripcion'], $data['url_github'], $data['url_produccion'], $data['imagen']);
         $stmt->execute();
         echo json_encode(["success" => true, "id" => $conn->insert_id]);
         $stmt->close();
         break;
 
     case 'PATCH':
-        $d = getInput();
-        $permitidos = ['titulo', 'descripcion', 'url_github', 'url_produccion', 'imagen'];
-        $sets = [];
+        $data = getInput();
+        $campos = ['titulo', 'descripcion', 'url_github', 'url_produccion', 'imagen'];
+        $updates = [];
         $params = [];
         $types = '';
-        foreach ($permitidos as $campo) {
-            if (isset($d[$campo])) {
-                $sets[] = "$campo = ?";
-                $params[] = $d[$campo];
+
+        foreach ($campos as $campo) {
+            if (isset($data[$campo])) {
+                $updates[] = "$campo = ?";
+                $params[] = $data[$campo];
                 $types .= 's';
             }
         }
-        if ($id && count($sets) > 0) {
+
+        if ($id && count($updates)) {
             $params[] = $id;
             $types .= 'i';
-            $sql = "UPDATE proyectos SET " . implode(", ", $sets) . " WHERE id = ?";
+            $sql = "UPDATE proyectos SET " . implode(", ", $updates) . " WHERE id = ?";
             $stmt = $conn->prepare($sql);
             $stmt->bind_param($types, ...$params);
             $stmt->execute();
@@ -96,7 +99,7 @@ switch ($method) {
             $stmt->close();
         } else {
             http_response_code(400);
-            echo json_encode(["error" => "Datos inválidos"]);
+            echo json_encode(["error" => "ID o datos inválidos"]);
         }
         break;
 

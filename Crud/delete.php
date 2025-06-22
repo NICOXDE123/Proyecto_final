@@ -9,21 +9,49 @@ if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
     header("Location: index.php");
     exit();
 }
-$id = intval($_GET['id']);
 
-$ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, 'https://teclab.uct.cl/~nicolas.huenchual/Proyecto_final/api/Proyectos.php/' . $id);
-curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+$id = intval($_GET['id']);
+$api_url = "https://teclab.uct.cl/~nicolas.huenchual/Proyecto_final/api/Proyectos.php/$id";
+
+$data = ['_method' => 'DELETE'];
+
+$ch = curl_init($api_url);
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_POST => true,
+    CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+    CURLOPT_POSTFIELDS => json_encode($data),
+    CURLOPT_COOKIE => 'PHPSESSID=' . session_id(),
+    CURLOPT_TIMEOUT => 5 // ⏰ Reducido a 5 segundos
+]);
 
 $response = curl_exec($ch);
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+$curlError = curl_error($ch);
 curl_close($ch);
 
 if ($httpCode === 200) {
     header("Location: index.php");
     exit();
-} else {
-    echo "<div style='padding:20px;font-family:sans-serif;'>Error al eliminar el proyecto (código $httpCode)</div>";
+}
+
+$errorMsg = "Error al eliminar el proyecto. Código HTTP: $httpCode";
+if ($curlError) {
+    $errorMsg = "Error CURL: $curlError";
 }
 ?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Error al eliminar</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light d-flex align-items-center justify-content-center vh-100">
+  <div class="alert alert-danger text-center p-4 shadow" style="max-width: 500px;">
+    <h4 class="mb-3">Error al eliminar</h4>
+    <p><?= htmlspecialchars($errorMsg) ?></p>
+    <a href="index.php" class="btn btn-secondary mt-3">Volver al panel</a>
+  </div>
+</body>
+</html>
