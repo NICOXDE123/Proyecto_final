@@ -5,13 +5,12 @@ if (!isset($_SESSION['user'])) {
     exit();
 }
 
-$id = isset($_GET['id']) ? intval($_GET['id']) : 0;
-if ($id <= 0) {
-    echo "<div class='alert alert-danger'>ID de proyecto no válido.</div>";
+if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
+    header("Location: index.php");
     exit();
 }
 
-// Obtener proyecto
+$id = intval($_GET['id']);
 $api_url = 'https://teclab.uct.cl/~nicolas.huenchual/Proyecto_final/api/Proyectos.php/' . $id;
 $json = @file_get_contents($api_url);
 $p = json_decode($json, true);
@@ -21,7 +20,9 @@ if (!$p || isset($p['error'])) {
     exit();
 }
 
-// Procesar formulario
+$mensaje = null;
+$esExito = false;
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = [
         'titulo' => trim($_POST['titulo']),
@@ -30,7 +31,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'url_produccion' => trim($_POST['url_produccion']),
     ];
 
-    // Manejar imagen si se sube una nueva
     if (!empty($_FILES['imagen']['name'])) {
         $permitidos = ['image/jpeg', 'image/png', 'image/webp'];
         $tipo = mime_content_type($_FILES['imagen']['tmp_name']);
@@ -39,32 +39,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $nombreUnico = uniqid() . '_' . $nombreOriginal;
             if (move_uploaded_file($_FILES['imagen']['tmp_name'], "../uploads/$nombreUnico")) {
                 $data['imagen'] = $nombreUnico;
+            } else {
+                $mensaje = "Error al subir la nueva imagen.";
             }
         } else {
-            die("<div class='alert alert-danger'>Formato de imagen no permitido. Solo JPG, PNG o WEBP.</div>");
+            $mensaje = "⚠️ Formato de imagen no permitido.";
         }
     }
 
-    // Enviar PATCH a la API
-$data['_method'] = 'PATCH'; // Indicamos que queremos simular un PATCH
+    if (!$mensaje) {
+        $data['_method'] = 'PATCH';
 
-// Enviar PATCH a la API
-$ch = curl_init($api_url);
-curl_setopt_array($ch, [
-    CURLOPT_CUSTOMREQUEST => 'PATCH',
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-    CURLOPT_POSTFIELDS => json_encode($data)
-]);
-// 👇 Esta línea es crucial
-curl_setopt($ch, CURLOPT_COOKIE, 'PHPSESSID=' . session_id());
+        $ch = curl_init($api_url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+            CURLOPT_POSTFIELDS => json_encode($data),
+            CURLOPT_COOKIE => 'PHPSESSID=' . session_id(),
+            CURLOPT_TIMEOUT => 10
+        ]);
 
-    if ($httpCode === 200) {
-        header("Location: index.php");
-        exit();
-    } else {
-        $errorMsg = json_decode($response, true)['error'] ?? "Error al actualizar el proyecto (código $httpCode)";
-        echo "<div class='alert alert-danger'>$errorMsg</div>";
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+        curl_close($ch);
+
+        $result = json_decode($response, true);
+
+        if (($httpCode === 200 || $httpCode === 204) && isset($result['success'])) {
+            $mensaje = "✅ Proyecto actualizado correctamente. Redirigiendo...";
+            $esExito = true;
+            header("refresh:2;url=index.php"); // redirección tras 2 segundos
+        } else {
+            $mensaje = $result['error'] ?? "Error al actualizar el proyecto (código $httpCode)";
+            if ($curlError) {
+                $mensaje .= "<br>Error CURL: $curlError";
+            }
+        }
     }
 }
 ?>
@@ -83,6 +95,12 @@ curl_setopt($ch, CURLOPT_COOKIE, 'PHPSESSID=' . session_id());
     <a href="index.php" class="btn btn-outline-secondary mb-3">
       <i class="fa fa-arrow-left"></i> Regresar
     </a>
+
+    <?php if ($mensaje): ?>
+      <div class="alert <?= $esExito ? 'alert-success' : 'alert-danger' ?>">
+        <?= $mensaje ?>
+      </div>
+    <?php endif; ?>
 
     <form method="post" enctype="multipart/form-data">
       <div class="mb-3">

@@ -5,12 +5,13 @@ if (!isset($_SESSION['user'])) {
     exit();
 }
 
+$successMsg = null;
 $errorMsg = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $img = null;
 
-    // Validar y subir imagen
+    // Subida de imagen
     if (!empty($_FILES['imagen']['name'])) {
         $nombreOriginal = basename($_FILES['imagen']['name']);
         $img = uniqid() . '_' . $nombreOriginal;
@@ -28,10 +29,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!$errorMsg) {
         $data = [
-            'titulo' => $_POST['titulo'],
-            'descripcion' => $_POST['descripcion'],
-            'url_github' => $_POST['url_github'],
-            'url_produccion' => $_POST['url_produccion'],
+            'titulo' => trim($_POST['titulo']),
+            'descripcion' => trim($_POST['descripcion']),
+            'url_github' => trim($_POST['url_github']),
+            'url_produccion' => trim($_POST['url_produccion']),
             'imagen' => $img
         ];
 
@@ -41,12 +42,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
             CURLOPT_POSTFIELDS => json_encode($data),
+            CURLOPT_COOKIE => 'PHPSESSID=' . session_id(),
             CURLOPT_TIMEOUT => 10
         ]);
-
-        // Enviar la cookie de sesión
-
-        curl_setopt($ch, CURLOPT_COOKIE, 'PHPSESSID=' . session_id());
 
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -55,21 +53,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $resultado = json_decode($response, true);
 
         if (($httpCode === 200 || $httpCode === 201) && isset($resultado['success'])) {
-        header("Location: index.php");
-        exit();
+            $successMsg = "✅ Proyecto guardado exitosamente. Redirigiendo...";
+            echo "<script>setTimeout(() => window.location.href = 'index.php', 1500);</script>";
         } else {
-         $mensaje = $resultado['error'] ?? "Error inesperado al guardar el proyecto.";
-          echo "<div class='alert alert-danger'>";
-          echo "<strong>Error al guardar el proyecto</strong><br>";
-          echo "Código HTTP: $httpCode<br>";
-          echo "Mensaje: " . htmlspecialchars($mensaje) . "<br>";
-          echo "Respuesta completa:<pre>" . htmlspecialchars($response) . "</pre>";
-          echo "</div>";
+            $mensaje = $resultado['error'] ?? "Error inesperado al guardar el proyecto.";
+            $errorMsg = "Error al guardar el proyecto. Código HTTP: $httpCode. Mensaje: " . htmlspecialchars($mensaje);
         }
-        
     }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -87,8 +80,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <i class="fa fa-arrow-left"></i> Regresar
     </a>
 
+    <?php if ($successMsg): ?>
+      <div class="alert alert-success text-center"><?= htmlspecialchars($successMsg) ?></div>
+    <?php endif; ?>
+
     <?php if ($errorMsg): ?>
-      <div class="alert alert-danger"><?= htmlspecialchars($errorMsg) ?></div>
+      <div class="alert alert-danger text-center"><?= htmlspecialchars($errorMsg) ?></div>
     <?php endif; ?>
 
     <form method="post" enctype="multipart/form-data">

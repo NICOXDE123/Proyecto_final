@@ -22,7 +22,7 @@ curl_setopt_array($ch, [
     CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
     CURLOPT_POSTFIELDS => json_encode($data),
     CURLOPT_COOKIE => 'PHPSESSID=' . session_id(),
-    CURLOPT_TIMEOUT => 5 // ⏰ Reducido a 5 segundos
+    CURLOPT_TIMEOUT => 5
 ]);
 
 $response = curl_exec($ch);
@@ -30,28 +30,39 @@ $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 $curlError = curl_error($ch);
 curl_close($ch);
 
-if ($httpCode === 200) {
-    header("Location: index.php");
-    exit();
-}
-
-$errorMsg = "Error al eliminar el proyecto. Código HTTP: $httpCode";
-if ($curlError) {
-    $errorMsg = "Error CURL: $curlError";
+// Si fue exitoso
+if (in_array($httpCode, [200, 204])) {
+    $mensaje = "✅ Proyecto eliminado correctamente. Redirigiendo al panel...";
+    $esExito = true;
+} else {
+    // Si falló
+    $mensaje = "❌ Error al eliminar el proyecto. Código HTTP: $httpCode";
+    if ($curlError) {
+        $mensaje = "❌ Error CURL: $curlError";
+    } elseif (!empty($response)) {
+        $json = json_decode($response, true);
+        if (isset($json['error'])) {
+            $mensaje = "❌ Error: " . htmlspecialchars($json['error']);
+        }
+    }
+    $esExito = false;
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Error al eliminar</title>
+  <title><?= $esExito ? 'Proyecto eliminado' : 'Error al eliminar' ?></title>
+  <meta http-equiv="refresh" content="<?= $esExito ? '2;url=index.php' : '' ?>">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light d-flex align-items-center justify-content-center vh-100">
-  <div class="alert alert-danger text-center p-4 shadow" style="max-width: 500px;">
-    <h4 class="mb-3">Error al eliminar</h4>
-    <p><?= htmlspecialchars($errorMsg) ?></p>
-    <a href="index.php" class="btn btn-secondary mt-3">Volver al panel</a>
+  <div class="alert <?= $esExito ? 'alert-success' : 'alert-danger' ?> text-center p-4 shadow" style="max-width: 500px;">
+    <h4 class="mb-3"><?= $esExito ? 'Proyecto eliminado' : 'Error al eliminar' ?></h4>
+    <p><?= $mensaje ?></p>
+    <a href="index.php" class="btn btn-<?= $esExito ? 'success' : 'secondary' ?> mt-3">Volver al panel</a>
   </div>
 </body>
 </html>
