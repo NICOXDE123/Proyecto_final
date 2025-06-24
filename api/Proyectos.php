@@ -95,6 +95,7 @@ switch ($method) {
             $stmt = $conn->prepare($sql);
             $stmt->bind_param($types, ...$params);
             $stmt->execute();
+            http_response_code(200); 
             echo json_encode(["success" => true]);
             $stmt->close();
         } else {
@@ -108,6 +109,7 @@ switch ($method) {
             $stmt = $conn->prepare("DELETE FROM proyectos WHERE id = ?");
             $stmt->bind_param("i", $id);
             $stmt->execute();
+            http_response_code(200);
             echo json_encode(["success" => true]);
             $stmt->close();
         } else {

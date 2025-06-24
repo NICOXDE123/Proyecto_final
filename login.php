@@ -5,17 +5,7 @@ session_start();
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-// Conexión a la base de datos
-$host = "localhost";
-$db = "nicolas_huenchual_db1";
-$user = "nicolas_huenchual";
-$pass = "nicolas_huenchual2025";
-
-$conn = new mysqli($host, $user, $pass, $db);
-
-if ($conn->connect_error) {
-    die("Error de conexión: " . $conn->connect_error);
-}
+include './api/config.php';// Ruta correcta al archivo de conexión
 
 // Verificar envío del formulario
 if ($_SERVER["REQUEST_METHOD"] == "POST") {

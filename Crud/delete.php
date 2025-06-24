@@ -15,6 +15,9 @@ $api_url = "https://teclab.uct.cl/~nicolas.huenchual/Proyecto_final/api/Proyecto
 
 $data = ['_method' => 'DELETE'];
 
+$mensaje = null;
+$esExito = false;
+
 $ch = curl_init($api_url);
 curl_setopt_array($ch, [
     CURLOPT_RETURNTRANSFER => true,
@@ -30,12 +33,11 @@ $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 $curlError = curl_error($ch);
 curl_close($ch);
 
-// Si fue exitoso
+// Evaluar respuesta
 if (in_array($httpCode, [200, 204])) {
     $mensaje = "✅ Proyecto eliminado correctamente. Redirigiendo al panel...";
     $esExito = true;
 } else {
-    // Si falló
     $mensaje = "❌ Error al eliminar el proyecto. Código HTTP: $httpCode";
     if ($curlError) {
         $mensaje = "❌ Error CURL: $curlError";
@@ -48,13 +50,14 @@ if (in_array($httpCode, [200, 204])) {
     $esExito = false;
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <title><?= $esExito ? 'Proyecto eliminado' : 'Error al eliminar' ?></title>
-  <meta http-equiv="refresh" content="<?= $esExito ? '2;url=index.php' : '' ?>">
+  <?php if ($esExito): ?>
+    <meta http-equiv="refresh" content="2;url=index.php">
+  <?php endif; ?>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>

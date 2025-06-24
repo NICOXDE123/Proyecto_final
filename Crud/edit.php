@@ -11,7 +11,7 @@ if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
 }
 
 $id = intval($_GET['id']);
-$api_url = 'https://teclab.uct.cl/~nicolas.huenchual/Proyecto_final/api/Proyectos.php/' . $id;
+$api_url = 'https://teclab.uct.cl/~nicolas.huenchual/Proyecto_final/api/Proyectos.php/' .$id;
 $json = @file_get_contents($api_url);
 $p = json_decode($json, true);
 
@@ -70,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (($httpCode === 200 || $httpCode === 204) && isset($result['success'])) {
             $mensaje = "✅ Proyecto actualizado correctamente. Redirigiendo...";
             $esExito = true;
-            header("refresh:2;url=index.php"); // redirección tras 2 segundos
+            header("refresh:2;url=index.php"); // redirige tras 2 segundos
         } else {
             $mensaje = $result['error'] ?? "Error al actualizar el proyecto (código $httpCode)";
             if ($curlError) {
@@ -96,6 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <i class="fa fa-arrow-left"></i> Regresar
     </a>
 
+    <!-- ✅ MENSAJE DE ESTADO -->
     <?php if ($mensaje): ?>
       <div class="alert <?= $esExito ? 'alert-success' : 'alert-danger' ?>">
         <?= $mensaje ?>

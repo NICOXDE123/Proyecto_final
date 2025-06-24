@@ -5,8 +5,8 @@ if (!isset($_SESSION['user'])) {
     exit();
 }
 
-$successMsg = null;
-$errorMsg = null;
+$mensaje = null;
+$esExito = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $img = null;
@@ -20,14 +20,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (in_array($_FILES['imagen']['type'], $tiposPermitidos)) {
             if (!move_uploaded_file($_FILES['imagen']['tmp_name'], $rutaDestino)) {
-                $errorMsg = "Error al subir la imagen al servidor.";
+                $mensaje = "❌ Error al subir la imagen al servidor.";
             }
         } else {
-            $errorMsg = "⚠️ Formato de imagen no permitido.";
+            $mensaje = "⚠️ Formato de imagen no permitido.";
         }
     }
 
-    if (!$errorMsg) {
+    if (!$mensaje) {
         $data = [
             'titulo' => trim($_POST['titulo']),
             'descripcion' => trim($_POST['descripcion']),
@@ -53,11 +53,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $resultado = json_decode($response, true);
 
         if (($httpCode === 200 || $httpCode === 201) && isset($resultado['success'])) {
-            $successMsg = "✅ Proyecto guardado exitosamente. Redirigiendo...";
-            echo "<script>setTimeout(() => window.location.href = 'index.php', 1500);</script>";
+            $mensaje = "✅ Proyecto guardado exitosamente. Redirigiendo...";
+            $esExito = true;
+            header("refresh:2;url=index.php");
         } else {
-            $mensaje = $resultado['error'] ?? "Error inesperado al guardar el proyecto.";
-            $errorMsg = "Error al guardar el proyecto. Código HTTP: $httpCode. Mensaje: " . htmlspecialchars($mensaje);
+            $mensaje = "❌ Error al guardar el proyecto. Código HTTP: $httpCode";
+            if (isset($resultado['error'])) {
+                $mensaje .= "<br>Mensaje: " . htmlspecialchars($resultado['error']);
+            }
         }
     }
 }
@@ -70,22 +73,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <title>Agregar Proyecto</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
 </head>
 <body class="bg-light">
   <div class="container py-5">
-    <h2 class="mb-4 text-primary"><i class="fa fa-plus"></i> Agregar Proyecto</h2>
-    
-    <a href="index.php" class="btn btn-outline-secondary mb-3">
-      <i class="fa fa-arrow-left"></i> Regresar
-    </a>
+    <h2 class="mb-4 text-primary">Agregar Proyecto</h2>
 
-    <?php if ($successMsg): ?>
-      <div class="alert alert-success text-center"><?= htmlspecialchars($successMsg) ?></div>
-    <?php endif; ?>
+    <a href="index.php" class="btn btn-outline-secondary mb-3">← Volver al panel</a>
 
-    <?php if ($errorMsg): ?>
-      <div class="alert alert-danger text-center"><?= htmlspecialchars($errorMsg) ?></div>
+    <?php if ($mensaje): ?>
+      <div class="alert <?= $esExito ? 'alert-success' : 'alert-danger' ?> text-center">
+        <?= $mensaje ?>
+      </div>
     <?php endif; ?>
 
     <form method="post" enctype="multipart/form-data">
@@ -115,9 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
 
       <div class="d-grid">
-        <button type="submit" class="btn btn-success">
-          <i class="fa fa-save"></i> Guardar Proyecto
-        </button>
+        <button type="submit" class="btn btn-success">Guardar Proyecto</button>
       </div>
     </form>
   </div>
