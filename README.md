@@ -88,3 +88,11 @@ Proyecto_final/
 - Fecha de entrega: **24 de junio de 2025**
 - Profesor: **[Nombre del docente]**
 - Asignatura: **Diseño y Desarrollo Web + IA**
+
+# Proyecto Final — CRUD de Proyectos Personales
+
+🔗 **Enlace en línea:**  
+[https://teclab.uct.cl/~nicolas.huenchual/Proyecto_final](https://teclab.uct.cl/~nicolas.huenchual/Proyecto_final)
+
+📁 **Repositorio en GitHub:**  
+[https://github.com/nicolas-huenchual/Proyecto_final](https://github.com/nicolas-huenchual/Proyecto_final)
