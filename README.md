@@ -95,4 +95,4 @@ Proyecto_final/
 [https://teclab.uct.cl/~nicolas.huenchual/Proyecto_final](https://teclab.uct.cl/~nicolas.huenchual/Proyecto_final)
 
 📁 **Repositorio en GitHub:**  
-[https://github.com/nicolas-huenchual/Proyecto_final](https://github.com/nicolas-huenchual/Proyecto_final)
+[https://github.com/nicolas-huenchual/Proyecto_final.git](https://github.com/nicolas-huenchual/Proyecto_final.git)
