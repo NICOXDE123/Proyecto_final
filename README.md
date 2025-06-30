@@ -86,7 +86,7 @@ Proyecto_final/
 
 - Autor: **Nicolás Huenchual**
 - Fecha de entrega: **24 de junio de 2025**
-- Profesor: **[Nombre del docente]**
+- Profesor: **Cristian iglesias**
 - Asignatura: **Diseño y Desarrollo Web + IA**
 
 # Proyecto Final — CRUD de Proyectos Personales
